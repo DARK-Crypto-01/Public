@@ -1,0 +1,64 @@
+# Browser Settings
+browser:
+  name: "firefox"  # Options: chrome, firefox, edge, opera
+  profile_path: ""  # Optional: Leave empty to use default profile path
+
+api:
+  base_url: "https://api.gateio.ws/api/v4"
+  key: "3d819e4c695b59cf051204dfe3e8a931"
+  secret: "4217aba9cdca23d475b2df22302b934274e022d7c555f192f2ea9cadd9f320a4"
+  endpoints:
+    open_orders: "/spot/open-orders"
+    cancel_order: "/spot/orders/{order_id}" 
+
+# Trading Settings
+trading:
+  currency_pair: "BTC_USDT"
+  url: "https://www.gate.io/trade/BTC_USDT"
+  trade_limit: 2  #max loops None for infinite
+  max_loops: null  # null for infinite
+  slider_percentage: 20
+  price_poll_interval: 0.1  # seconds
+  price_precision: 1       # Number of decimal places for price formatting
+
+  buy:
+    trigger_price_adjust: 0.1    # Percentage for Buy Trigger/Stop Price
+    limit_price_adjust: 0.2       # Percentage for Buy Order/Limit Price
+    selectors:
+      button: "div.sc-3acc2a25-0:nth-child(1)"
+      conditional_tab: "#mantine-r58-tab-stopByConditional > div:nth-child(1) > span:nth-child(1)"
+      trigger_price_field: ".tr-m-0 > div:nth-child(2) > input:nth-child(1)"
+      condition_dropdown: "div.fw-500"
+      greater_equal_option: ".mantine-1ufzw1b > span:nth-child(1)"
+      limit_price_field: "div.row-container:nth-child(3) > div:nth-child(1) > div:nth-child(2) > input:nth-child(1)"
+      amount_slider: ".mantine-GateSlider-thumb"
+      place_order_button: ".mantine-cwyisp"
+
+  sell:
+    trigger_price_adjust: 0.1     # Percentage for Sell Trigger/Stop Price
+    limit_price_adjust: 0.2      # Percentage for Sell Order/Limit Price
+    selectors:
+      button: "div.sc-3acc2a25-0:nth-child(2)"
+      conditional_tab: "#mantine-r58-tab-stopByConditional > div:nth-child(1) > span:nth-child(1)"
+      trigger_price_field: ".tr-m-0 > div:nth-child(2) > input:nth-child(1)"
+      condition_dropdown: "div.fw-500"
+      less_equal_option: ".mantine-1jstos6 > span:nth-child(1)"
+      limit_price_field: "div.row-container:nth-child(3) > div:nth-child(1) > div:nth-child(2) > input:nth-child(1)"
+      amount_slider: ".mantine-GateSlider-thumb"
+      place_order_button: ".mantine-1v71nuo > div:nth-child(1)"
+
+# Common Selectors
+selectors:
+  price: ".bid"
+  confirm_popup_button: "button.mantine-132odz5:nth-child(2) > div:nth-child(1)"
+  order_type_dropdown: "#mantine-r4s"
+  stop_limit_orders: ".tr-table__row"
+  orders_container: ".tr-trade__table > tbody:nth-child(2)"
+  cancel_order_button: "button.tr-text-c-text-1 > div:nth-child(1) > span:nth-child(1)"
+  no_orders_placeholder: ".no-orders-placeholder"
+
+# Logging
+logging:
+  enabled: true
+  file: "trading_bot.log"
+  level: "INFO"
