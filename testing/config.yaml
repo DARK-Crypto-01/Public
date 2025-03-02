@@ -1,6 +1,7 @@
 # Browser Settings
 browser:
   name: "firefox"  # Options: chrome, firefox, edge, opera
+  driver_version: 0.35.0  # Specific geckodriver version
   profile_path: ""  # Optional: Leave empty to use default profile path
 
 api:
