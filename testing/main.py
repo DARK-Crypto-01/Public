@@ -46,7 +46,7 @@ def load_config():
         sys.exit(1)
 
 def setup_logging(config):
-    """Configure logging system using the entire configuration"""
+    """Configure logging system"""
     logging.basicConfig(
         level=config['logging']['level'],
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -70,7 +70,11 @@ def setup_browser(config):
 
         elif browser_name == 'firefox':
             options = webdriver.FirefoxOptions()
-            service = FirefoxService(GeckoDriverManager().install())
+            # Get driver version from config
+            driver_version = config['browser'].get('driver_version')
+            # Pass version to GeckoDriverManager
+            service = FirefoxService(GeckoDriverManager(version=driver_version).install())
+            
             if os.path.exists(profile_path):
                 profile_dirs = [d for d in os.listdir(profile_path) if d.endswith('.default')]
                 if profile_dirs:
@@ -101,8 +105,7 @@ def setup_browser(config):
 
 def main():
     config = load_config()
-    # Pass the entire configuration to setup_logging
-    setup_logging(config)
+    setup_logging(config['logging'])
     
     driver = None
     try:
