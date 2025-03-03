@@ -23,9 +23,9 @@ class GateIOWebSocketClient:
         :param currency_pair: e.g. "BTC_USDT" (will be converted to BTCUSDT)
         :param on_price_callback: Function to handle price updates
         :param api_key: Gate.io API key (32 characters)
-        :param api_secret: Gate.io API secret (40 characters)
+        :param api_secret: Gate.io API secret (64 characters)
         """
-        if len(api_key) != 32 or len(api_secret) != 40:
+        if len(api_key) != 32 or len(api_secret) != 64:
             raise ValueError("Invalid API credentials format")
 
         self.api_key = api_key
