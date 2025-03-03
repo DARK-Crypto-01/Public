@@ -13,7 +13,11 @@ from gateio_api import GateIOAPIClient
 ############################################
 
 class GateIOWebSocketClient:
-    def __init__(self, currency_pair, on_price_callback):
+    def __init__(self, currency_pair, on_price_callback, api_key, api_secret):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        # Add authentication to connection URL
+        self.ws_url = f"{config['api']['ws_base']}?api_key={self.api_key}&api_secret={self.api_secret}"
         """
         Initializes the WebSocket client.
         :param currency_pair: e.g. "BTC_USDT" (must match the subscription format)
