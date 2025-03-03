@@ -14,33 +14,33 @@ class GateIOAPIClient:
         self.secret = self.config['secret']
 
     def _generate_signature(self, method, endpoint, query_string=None, payload=None):
-    timestamp = str(time.time())
-    path = endpoint.split('?')[0]  # Extract path without query params
+        timestamp = str(time.time())
+        path = endpoint.split('?')[0]  # Extract path without query params
     
-    body = json.dumps(payload) if payload else ''
-    body_hash = hashlib.sha512(body.encode()).hexdigest()
+        body = json.dumps(payload) if payload else ''
+        body_hash = hashlib.sha512(body.encode()).hexdigest()
     
-    # Verified signature format from Gate.io docs
-    signature_string = "\n".join([
-        method.upper(),
-        path,
-        query_string or '',
-        body_hash,
-        timestamp
-    ])
+        # Verified signature format from Gate.io docs
+        signature_string = "\n".join([
+            method.upper(),
+            path,
+            query_string or '',
+            body_hash,
+            timestamp
+        ])
 
-    signature = hmac.new(
-        self.secret.encode('utf-8'),
-        signature_string.encode('utf-8'),
-        hashlib.sha512
-    ).hexdigest()
+        signature = hmac.new(
+            self.secret.encode('utf-8'),
+            signature_string.encode('utf-8'),
+            hashlib.sha512
+        ).hexdigest()
 
-    return {
-        "KEY": self.key,
-        "Timestamp": timestamp,
-        "SIGN": signature,
-        "Content-Type": "application/json" if method in ['POST', 'PUT', 'DELETE'] else ""
-  }
+        return {
+            "KEY": self.key,
+            "Timestamp": timestamp,
+            "SIGN": signature,
+            "Content-Type": "application/json" if method in ['POST', 'PUT', 'DELETE'] else ""
+        }
 
     def get_open_orders(self):
         endpoint = self.config['endpoints']['open_orders']
