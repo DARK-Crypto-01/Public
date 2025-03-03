@@ -21,7 +21,7 @@ class GateIOWebSocketClient:
         """
         self.currency_pair = currency_pair
         self.on_price_callback = on_price_callback
-        self.ws_url = "wss://api.gateio.ws/ws/v4"
+        self.ws_url = "wss://ws.gate.io/v4"  # Updated URL
         self.ws = None
         self.thread = None
         # Add thread lock
