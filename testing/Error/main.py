@@ -46,14 +46,20 @@ def load_config():
         sys.exit(1)
 
 def setup_logging(config):
-    """Configure logging system"""
+    """Safe logging setup with defaults"""
+    log_config = config.get('logging', {})
+    
+    handlers = []
+    if log_config.get('enabled', True):
+        handlers.append(
+            logging.FileHandler(log_config.get('file', 'trading_bot.log'))
+        )
+    handlers.append(logging.StreamHandler())
+    
     logging.basicConfig(
-        level=config['logging']['level'],
+        level=log_config.get('level', 'INFO'),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(config['logging']['file']),
-            logging.StreamHandler()
-        ]
+        handlers=handlers
     )
 
 def setup_browser(config):
