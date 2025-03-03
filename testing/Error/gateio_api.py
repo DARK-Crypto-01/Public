@@ -4,6 +4,8 @@ import hmac
 import json
 import time
 from urllib.parse import urlencode
+# Add at the top with other imports
+from urllib.parse import urlencode
 
 class GateIOAPIClient:
     def __init__(self, config):
