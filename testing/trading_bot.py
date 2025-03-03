@@ -56,12 +56,12 @@ class GateIOWebSocketClient:
         print("WebSocket closed:", close_status_code, close_msg)
 
     def on_open(self, ws):
-        # Construct and send a subscription message.
+        # Add required protocol headers
         sub_msg = {
             "time": int(time.time()),
-            "channel": "ticker",
+            "channel": "spot.tickers",
             "event": "subscribe",
-            "payload": [self.currency_pair]
+            "payload": [self.currency_pair.replace('_', '')]  # Remove underscore
         }
         ws.send(json.dumps(sub_msg))
 
