@@ -17,16 +17,24 @@ class GateIOAPIClient:
 
     def _generate_signature(self, method, endpoint, query_string=None, payload=None):
         timestamp = str(time.time())
-        path = endpoint.split('?')[0]  # Extract path without query params
+        path = endpoint.split('?')[0]  # Remove query params from path
+    
+        # Properly format empty query string
+        query_string = query_string or ''
+    
+        # Gate.io requires alphabetical parameter sorting
+        if query_string:
+            params = sorted(query_string.split('&'))
+            query_string = '&'.join(params)
     
         body = json.dumps(payload) if payload else ''
         body_hash = hashlib.sha512(body.encode()).hexdigest()
     
-        # Verified signature format from Gate.io docs
+        # Verified signature format
         signature_string = "\n".join([
             method.upper(),
             path,
-            query_string or '',
+            query_string,
             body_hash,
             timestamp
         ])
@@ -41,7 +49,7 @@ class GateIOAPIClient:
             "KEY": self.key,
             "Timestamp": timestamp,
             "SIGN": signature,
-            "Content-Type": "application/json" if method in ['POST', 'PUT', 'DELETE'] else ""
+            "Content-Type": "application/json" if method in ['POST','PUT','DELETE'] else ""
         }
 
     def get_open_orders(self):
