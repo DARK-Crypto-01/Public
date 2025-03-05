@@ -3,9 +3,7 @@ import hashlib
 import hmac
 import json
 import time
-from urllib.parse import urlencode
-# Add at the top with other imports
-from urllib.parse import urlencode
+from urllib.parse import urlparse, urlencode
 
 class GateIOAPIClient:
     def __init__(self, config):
@@ -13,44 +11,53 @@ class GateIOAPIClient:
         self.trading_config = config['trading']
         self.base_url = self.config['base_url']
         self.key = self.config['key']
-        self.secret = self.config['secret']
+        self.secret = self.config['secret'].encode('utf-8')
+        self.base_path = urlparse(self.base_url).path  # Extract /api/v4 from base URL
 
     def _generate_signature(self, method, endpoint, query_string=None, payload=None):
-        timestamp = str(time.time())
-        path = endpoint.split('?')[0]  # Remove query params from path
-    
-        # Properly format empty query string
-        query_string = query_string or ''
-    
-        # Gate.io requires alphabetical parameter sorting
+        # Combine base path with endpoint path
+        full_path = f"{self.base_path.rstrip('/')}/{endpoint.lstrip('/')}".split('?')[0]
+        
+        # Convert timestamp to integer
+        timestamp = str(int(time.time()))
+        
+        # Sort query parameters alphabetically
         if query_string:
             params = sorted(query_string.split('&'))
             query_string = '&'.join(params)
-    
+        
+        # Generate SHA512 hash of request body
         body = json.dumps(payload) if payload else ''
         body_hash = hashlib.sha512(body.encode()).hexdigest()
-    
-        # Verified signature format
-        signature_string = "\n".join([
+        
+        # Create signature payload
+        signature_payload = '\n'.join([
             method.upper(),
-            path,
-            query_string,
+            full_path,
+            query_string or '',
             body_hash,
             timestamp
         ])
-
+        
+        # Generate HMAC-SHA512 signature
         signature = hmac.new(
-            self.secret.encode('utf-8'),
-            signature_string.encode('utf-8'),
+            self.secret,
+            signature_payload.encode('utf-8'),
             hashlib.sha512
         ).hexdigest()
-
-        return {
+        
+        # Construct headers
+        headers = {
             "KEY": self.key,
             "Timestamp": timestamp,
-            "SIGN": signature,
-            "Content-Type": "application/json" if method in ['POST','PUT','DELETE'] else ""
+            "SIGN": signature
         }
+        
+        # Add Content-Type only for methods with body
+        if method in ['POST', 'PUT', 'DELETE']:
+            headers["Content-Type"] = "application/json"
+            
+        return headers
 
     def get_open_orders(self):
         endpoint = self.config['endpoints']['open_orders']
@@ -60,13 +67,16 @@ class GateIOAPIClient:
         })
         url = f"{self.base_url}{endpoint}?{query}"
         headers = self._generate_signature('GET', endpoint, query)
-
+        
         try:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            print(f"API Error: {e.response.text}")
+            return []
         except Exception as e:
-            print(f"API Error: {str(e)}")
+            print(f"Request Failed: {str(e)}")
             return []
 
     def cancel_order(self, order_id):
