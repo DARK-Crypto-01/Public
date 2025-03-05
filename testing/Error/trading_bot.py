@@ -147,12 +147,12 @@ class TradingCore:
         self.logger = logging.getLogger("TradingCore")
         self.current_price = None
 
-        # Initialize WebSocket client with credentials
+        # Initialize WebSocket client with proper credentials
         self.ws_client = GateIOWebSocketClient(
             currency_pair=self.config['trading']['currency_pair'],
             on_price_callback=self.update_price,
             api_key=self.config['api']['key'],
-            api_secret=self.config['api']['secret']
+            api_secret=self.config['api']['secret'].encode('utf-8')  # Ensure secret is bytes
         )
         self.ws_client.start()
         self.current_price = self._fetch_initial_price()
