@@ -8,8 +8,8 @@ api:
   base_url: "https://api.gateio.ws/api/v4"
   # ... rest of config
   base_url: "https://api.gateio.ws/api/v4"
-  key: "3d819e4c695b59cf051204dfe3e8a931"
-  secret: "4217aba9cdca23d475b2df22302b934274e022d7c555f192f2ea9cadd9f320a4"
+  key: "107b455a7a46b4e43aaf658613006a85"
+  secret: "a5de19e0ad40c57ad7f5d4b067747729b55a2cfbbc0f374c1b214a1cfd23f50e"
   endpoints:
     open_orders: "/spot/open-orders"
     cancel_order: "/spot/orders/{order_id}" 
