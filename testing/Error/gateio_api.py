@@ -1,98 +1,61 @@
-# gateio_api.py
 import ccxt
-import logging
-from typing import List, Dict, Optional
 
 class GateIOAPIClient:
-    def __init__(self, config: dict):
-        """
-        Initialize CCXT-based Gate.io client
-        :param config: Configuration dictionary from YAML
-        """
-        self.logger = logging.getLogger("GateIOAPIClient")
-        self.config = config
-        self._validate_config()
-        
-        # Initialize CCXT exchange
+    def __init__(self, config):
+        self.config = config['api']
+        self.trading_config = config['trading']
+        self.key = self.config['key']
+        self.secret = self.config['secret']
+        # Convert currency pair from "BTC_USDT" to "BTC/USDT"
+        self.symbol = self.trading_config['currency_pair'].replace("_", "/")
+        # Initialize the CCXT Gate.io client with rate limit enabled
         self.exchange = ccxt.gateio({
-            'apiKey': config['api']['key'],
-            'secret': config['api']['secret'],
-            'enableRateLimit': True,  # Essential for rate limit compliance
-            'options': {
-                'adjustForTimeDifference': True,  # Auto-sync time difference
-                'createMarketBuyOrderRequiresPrice': False,
-            }
+            'apiKey': self.key,
+            'secret': self.secret,
+            'enableRateLimit': True,
         })
-        self.currency_pair = config['trading']['currency_pair']
 
-    def _validate_config(self):
-        """Validate required configuration parameters"""
-        required_keys = ['key', 'secret', 'endpoints']
-        if not all(k in self.config['api'] for k in required_keys):
-            raise ValueError("Missing required API configuration parameters")
-
-    def get_open_orders(self) -> List[Dict]:
+    def get_open_orders(self):
         """
-        Get all open orders for the configured currency pair
-        :return: List of open orders
+        Fetch all open orders for the specified currency pair using CCXT.
         """
         try:
-            return self.exchange.fetch_open_orders(self.currency_pair)
-        except ccxt.NetworkError as e:
-            self.logger.error(f"Network error fetching orders: {str(e)}")
-            return []
-        except ccxt.ExchangeError as e:
-            self.logger.error(f"Exchange error fetching orders: {str(e)}")
-            return []
+            open_orders = self.exchange.fetch_open_orders(self.symbol)
+            return open_orders
         except Exception as e:
-            self.logger.error(f"Unexpected error: {str(e)}")
+            print(f"API Error (fetching open orders): {str(e)}")
             return []
 
-    def cancel_order(self, order_id: str) -> bool:
+    def cancel_order(self, order_id):
         """
-        Cancel an order by ID
-        :param order_id: Order ID to cancel
-        :return: True if successful, False otherwise
+        Cancel a specific order using its order ID with CCXT.
         """
         try:
-            response = self.exchange.cancel_order(order_id, self.currency_pair)
-            return response.get('status') in ['closed', 'canceled']
-        except ccxt.OrderNotFound:
-            self.logger.warning(f"Order {order_id} not found")
-            return True  # Consider already canceled
-        except ccxt.NetworkError as e:
-            self.logger.error(f"Network error canceling order: {str(e)}")
-            return False
-        except ccxt.ExchangeError as e:
-            self.logger.error(f"Exchange error canceling order: {str(e)}")
-            return False
+            self.exchange.cancel_order(order_id, self.symbol)
+            print(f"Cancelled order {order_id}.")
+            return True
         except Exception as e:
-            self.logger.error(f"Unexpected error: {str(e)}")
+            print(f"Cancel Error: {str(e)}")
             return False
 
-    def cancel_all_orders(self, currency_pair: Optional[str] = None) -> List[str]:
+    def cancel_all_orders(self, currency_pair):
         """
-        Cancel all open orders for a currency pair
-        :param currency_pair: Optional currency pair (uses config pair if None)
-        :return: List of canceled order IDs
+        Cancels all open orders for the given currency pair using CCXT.
+        Returns a list of order IDs that were successfully canceled.
         """
-        canceled_ids = []
-        target_pair = currency_pair or self.currency_pair
+        canceled_orders = []
+        # Here, we ignore the currency_pair parameter and use the converted symbol.
+        open_orders = self.get_open_orders()
+
+        for order in open_orders:
+            # CCXT returns the trading pair in the 'symbol' key.
+            if order.get('symbol') == self.symbol:
+                order_id = order.get('id')
+                if order_id and self.cancel_order(order_id):
+                    canceled_orders.append(order_id)
         
-        try:
-            # CCXT's native method for canceling all orders
-            response = self.exchange.cancel_all_orders(target_pair)
-            if isinstance(response, list):
-                canceled_ids = [order['id'] for order in response]
-        except ccxt.NotSupported:
-            # Fallback to manual cancellation if not supported
-            self.logger.warning("Using manual order cancellation fallback")
-            orders = self.get_open_orders()
-            for order in orders:
-                if order['symbol'] == target_pair:
-                    if self.cancel_order(order['id']):
-                        canceled_ids.append(order['id'])
-        except Exception as e:
-            self.logger.error(f"Error canceling all orders: {str(e)}")
-            
-        return canceled_ids
+        if canceled_orders:
+            print(f"All orders canceled for {self.symbol}: {canceled_orders}")
+        else:
+            print(f"No open orders to cancel for {self.symbol}.")
+        return canceled_orders
