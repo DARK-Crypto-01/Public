@@ -158,16 +158,10 @@ class TradingCore:
         self.current_price = self._fetch_initial_price()
         
     def _fetch_initial_price(self):
-        """Get initial price via REST API"""
         try:
-            endpoint = "/spot/tickers"
-            query = urlencode({'currency_pair': self.config['trading']['currency_pair']})
-            url = f"{self.api.base_url}{endpoint}?{query}"
-            headers = self.api._generate_signature('GET', endpoint, query)
-            
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            return float(response.json()[0]['last'])
+            # Use the ccxt exchange instance to fetch the ticker for the symbol
+            ticker = self.api.exchange.fetch_ticker(self.api.symbol)
+            return float(ticker['last'])
         except Exception as e:
             self.logger.critical(f"Initial price fetch failed: {str(e)}")
             raise SystemExit(1)
