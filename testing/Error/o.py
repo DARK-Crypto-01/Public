@@ -17,7 +17,7 @@ side = 'buy'            # 'buy' or 'sell'
 order_type = 'limit'     # Using a limit order type with a stop parameter
 amount = 0.012           # Order size
 price = 100            # Limit price to execute once the trigger is hit
-stop_price = 200       # The trigger price for the stop-limit order
+stop_price = 100000       # The trigger price for the stop-limit order
 
 # The parameters here instruct Gate.io to treat this as a stop-limit order.
 params = {
