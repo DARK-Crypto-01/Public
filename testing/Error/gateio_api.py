@@ -6,6 +6,7 @@ class GateIOAPIClient:
         self.trading_config = config['trading']
         self.key = self.config['key']
         self.secret = self.config['secret']
+        self.base_url = self.config['base_url']
         # Convert currency pair from "BTC_USDT" to "BTC/USDT"
         self.symbol = self.trading_config['currency_pair'].replace("_", "/")
         # Initialize the CCXT Gate.io client with rate limit enabled
