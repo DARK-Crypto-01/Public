@@ -152,7 +152,7 @@ class TradingCore:
             currency_pair=self.config['trading']['currency_pair'],
             on_price_callback=self.update_price,
             api_key=self.config['api']['key'],
-            api_secret=self.config['api']['secret'].encode('utf-8')  # Ensure secret is bytes
+            api_secret=self.config['api']['secret']
         )
         self.ws_client.start()
         self.current_price = self._fetch_initial_price()
