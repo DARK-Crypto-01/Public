@@ -72,7 +72,7 @@ class GateIOAPIClient:
         try:
             if side == 'buy':
                 # Get percentage from buy config
-                buy_pct = self.config['trading']['buy']['amount_percentage']
+                buy_pct = self.trading_config['buy']['amount_percentage']
                 available_quote = balance[quote]['free']
             
                 # Calculate quote amount and convert to base
@@ -81,7 +81,7 @@ class GateIOAPIClient:
             
             elif side == 'sell':
                 # Direct percentage of base currency
-                sell_pct = self.config['trading']['sell']['amount_percentage']
+                sell_pct = self.trading_config['sell']['amount_percentage']
                 available_base = balance[base]['free']
                 return (available_base * sell_pct) / 100
             
