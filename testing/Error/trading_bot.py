@@ -78,11 +78,16 @@ class TradingCore:
                 self.state.active = False
                 new_price = self._get_market_price()
                 trigger, limit = self._calculate_prices(new_price, self.state.order_type)
-                self.ui_helper.place_ui_order(self.state.order_type, trigger, limit)
-                self.state.last_price = new_price
-                self.state.active = True
+                
+                new_order = self.api.place_stop_limit_order(
+                    self.state.order_type, trigger, limit
+                )
+                if new_order:
+                    self.state.last_price = new_price
+                    self.state.active = True
+                    self.state.order_id = new_order['id']
         except Exception as e:
-            self.logger.error(f"Failed to cancel and replace order: {str(e)}")
+            self.logger.error(f"Replace failed: {str(e)}")
             self._recover_state()
 
     def _handle_order_execution(self):
