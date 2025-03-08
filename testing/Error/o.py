@@ -13,11 +13,24 @@ markets = exchange.load_markets()
 
 # Define order parameters
 symbol = 'BTC/USDT'      # The market pair
-side = 'buy'            # 'buy' or 'sell'
+side = 'sell'            # 'buy' or 'sell'
 order_type = 'limit'     # Using a limit order type with a stop parameter
-amount = 0.000012           # Order size
-price = 100000            # Limit price to execute once the trigger is hit
-stop_price = 99990       # The trigger price for the stop-limit order
+price = 1000            # Limit price to execute once the trigger is hit
+stop_price = 2000       # The trigger price for the stop-limit order
+percentage = 100          # Percentage of the balance to use (e.g., 10% of your balance)
+
+# Retrieve balance
+balance = exchange.fetch_balance()
+
+# For example, we're using USDT as the quote currency. Change as per your symbol
+base_currency = symbol.split('/')[0]  # e.g., 'BTC'
+quote_currency = symbol.split('/')[1]  # e.g., 'USDT'
+
+# Get the available balance of the quote currency (e.g., USDT)
+available_balance = balance['free'][quote_currency]
+
+# Calculate the order amount based on the percentage of the available balance
+amount = (available_balance * percentage) / 100
 
 # The parameters here instruct Gate.io to treat this as a stop-limit order.
 params = {
