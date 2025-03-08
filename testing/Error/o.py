@@ -18,8 +18,8 @@ price = 98000            # Limit price to execute once the trigger is hit (for b
 stop_price = 97000       # The trigger price for the stop-limit order
 
 # Define percentages for buying and selling
-buy_percentage = 15       # Use 5% of available quote currency (USDT) for a buy order
-sell_percentage = 15     # Use 10% of available base currency (BTC) for a sell order
+buy_percentage = 25       # Use 5% of available quote currency (USDT) for a buy order
+sell_percentage = 100     # Use 10% of available base currency (BTC) for a sell order
 
 # Retrieve balance from your account
 balance = exchange.fetch_balance()
