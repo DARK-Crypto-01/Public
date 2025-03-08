@@ -15,6 +15,7 @@ class GateIOAPIClient:
             'secret': self.secret,
             'enableRateLimit': True,
         })
+        self.logger = logging.getLogger("GateIOAPIClient")
 
     def get_open_orders(self):
         """
@@ -60,3 +61,69 @@ class GateIOAPIClient:
         else:
             print(f"No open orders to cancel for {self.symbol}.")
         return canceled_orders
+
+    # gateio_api.py (Updated)
+    def calculate_order_amount(self, side, limit_price):
+        """Calculate base currency amount with proper conversion"""
+        balance = self.exchange.fetch_balance()
+        base, quote = self.symbol.split('/')
+    
+        try:
+            if side == 'buy':
+                # Get percentage from buy config
+                buy_pct = self.config['trading']['buy']['amount_percentage']
+                available_quote = balance[quote]['free']
+            
+                # Calculate quote amount and convert to base
+                quote_amount = (available_quote * buy_pct) / 100
+                return quote_amount / limit_price  # Base currency amount
+            
+            elif side == 'sell':
+                # Direct percentage of base currency
+                sell_pct = self.config['trading']['sell']['amount_percentage']
+                available_base = balance[base]['free']
+                return (available_base * sell_pct) / 100
+            
+            raise ValueError("Invalid side specified")
+        
+        except KeyError as e:
+            self.logger.error(f"Balance check failed: {str(e)}")
+            return 0
+        except ZeroDivisionError:
+            self.logger.error("Invalid zero price encountered")
+            return 0
+
+    def place_stop_limit_order(self, order_type, trigger_price, limit_price):
+        try:
+            # Get amount in base currency terms
+            amount = self.calculate_order_amount(order_type, limit_price)
+            if amount <= 0:
+                self.logger.error("Invalid order amount calculated")
+                return None
+
+            # Gate.io requires base amount in minimum increments
+            market = self.exchange.market(self.symbol)
+            precision = market['precision']['amount']
+            amount = self.exchange.amount_to_precision(self.symbol, amount)
+
+            params = {
+                'stopPrice': trigger_price,
+                'type': 'limit',
+                'price': limit_price,
+                'amount': amount
+            }
+
+            order = self.exchange.create_order(
+                symbol=self.symbol,
+                type='limit',
+                side=order_type,
+                amount=amount,
+                price=limit_price,
+                params=params
+            )
+        
+            return order
+         
+        except Exception as e:
+            self.logger.error(f"Order failed: {str(e)}")
+            return None
