@@ -12,7 +12,7 @@ class OrderState:
         self.order_id = None
 
 class TradingCore:
-    def __init__(self, driver, config):
+    def __init__(self, config):
         self.config = config
         self.api = GateIOAPIClient(config)
         self.state = OrderState()
