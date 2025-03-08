@@ -53,10 +53,13 @@ class TradingCore:
         last_price = self._get_market_price()
         order_type = 'buy' if self.state.order_type != 'buy' else 'sell'
         trigger, limit = self._calculate_prices(last_price, order_type)
-        if self.ui_helper.place_ui_order(order_type, trigger, limit):
+        
+        order = self.api.place_stop_limit_order(order_type, trigger, limit)
+        if order:
             self.state.active = True
             self.state.order_type = order_type
             self.state.last_price = last_price
+            self.state.order_id = order['id']
 
     def _monitor_active_order(self, order):
         current_price = self._get_market_price()
