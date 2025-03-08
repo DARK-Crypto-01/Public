@@ -5,7 +5,6 @@ import pprint
 exchange = ccxt.gateio({
     'apiKey': '107b455a7a46b4e43aaf658613006a85',     # Replace with your API key
     'secret': 'a5de19e0ad40c57ad7f5d4b067747729b55a2cfbbc0f374c1b214a1cfd23f50e',      # Replace with your API secret
-    'enableRateLimit': True,
 })
 
 # Load market data
@@ -13,29 +12,40 @@ markets = exchange.load_markets()
 
 # Define order parameters
 symbol = 'BTC/USDT'      # The market pair
-side = 'sell'            # 'buy' or 'sell'
+side = 'buy'             # Change to 'sell' for sell orders
 order_type = 'limit'     # Using a limit order type with a stop parameter
-price = 1000            # Limit price to execute once the trigger is hit
-stop_price = 2000       # The trigger price for the stop-limit order
-percentage = 100          # Percentage of the balance to use (e.g., 10% of your balance)
+price = 58000            # Limit price to execute once the trigger is hit (for buy)
+stop_price = 57000       # The trigger price for the stop-limit order
 
-# Retrieve balance
+# Define percentages for buying and selling
+buy_percentage = 5       # Use 5% of available quote currency (USDT) for a buy order
+sell_percentage = 10     # Use 10% of available base currency (BTC) for a sell order
+
+# Retrieve balance from your account
 balance = exchange.fetch_balance()
 
-# For example, we're using USDT as the quote currency. Change as per your symbol
-base_currency = symbol.split('/')[0]  # e.g., 'BTC'
+# Split the trading pair into base and quote currencies
+base_currency = symbol.split('/')[0]   # e.g., 'BTC'
 quote_currency = symbol.split('/')[1]  # e.g., 'USDT'
 
-# Get the available balance of the quote currency (e.g., USDT)
-available_balance = balance['free'][quote_currency]
+# Calculate the order amount based on the order side and respective percentage
+if side.lower() == 'buy':
+    # For a buy order, calculate the amount of BTC to buy based on available USDT balance
+    available_quote = balance['free'].get(quote_currency, 0)
+    # Calculate the funds to use and then determine the amount by dividing by the price
+    funds_to_use = (available_quote * buy_percentage) / 100
+    amount = funds_to_use / price
+elif side.lower() == 'sell':
+    # For a sell order, calculate the amount of BTC to sell based on available BTC balance
+    available_base = balance['free'].get(base_currency, 0)
+    amount = (available_base * sell_percentage) / 100
+else:
+    raise ValueError("Invalid side provided. Use 'buy' or 'sell'.")
 
-# Calculate the order amount based on the percentage of the available balance
-amount = (available_balance * percentage) / 100
-
-# The parameters here instruct Gate.io to treat this as a stop-limit order.
+# Prepare additional parameters for the stop-limit order
 params = {
-    'stopPrice': stop_price,  # This is the price at which the order is triggered
-    # Additional params such as 'timeInForce' may be added if required
+    'stopPrice': stop_price,  # This triggers the order when the price is reached
+    # Other parameters can be added here as needed
 }
 
 try:
