@@ -14,11 +14,11 @@ markets = exchange.load_markets()
 symbol = 'BTC/USDT'      # The market pair
 side = 'buy'             # Change to 'sell' for sell orders
 order_type = 'limit'     # Using a limit order type with a stop parameter
-price = 58000            # Limit price to execute once the trigger is hit (for buy)
-stop_price = 57000       # The trigger price for the stop-limit order
+price = 98000            # Limit price to execute once the trigger is hit (for buy)
+stop_price = 97000       # The trigger price for the stop-limit order
 
 # Define percentages for buying and selling
-buy_percentage = 5       # Use 5% of available quote currency (USDT) for a buy order
+buy_percentage = 13       # Use 5% of available quote currency (USDT) for a buy order
 sell_percentage = 10     # Use 10% of available base currency (BTC) for a sell order
 
 # Retrieve balance from your account
