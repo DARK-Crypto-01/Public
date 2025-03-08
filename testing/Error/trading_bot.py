@@ -13,15 +13,11 @@ class OrderState:
 
 class TradingCore:
     def __init__(self, driver, config):
-        self.driver = driver
         self.config = config
         self.api = GateIOAPIClient(config)
         self.state = OrderState()
         self.logger = logging.getLogger("TradingCore")
         self.current_price = None
-
-        # Initialize the UI order placement helper
-        self.ui_helper = UIOrderPlacement(driver, config)
 
         # Initialize WebSocket client with credentials
         self.ws_client = GateIOWebSocketClient(
