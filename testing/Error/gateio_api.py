@@ -1,4 +1,5 @@
 import ccxt
+import logging
 
 class GateIOAPIClient:
     def __init__(self, config):
