@@ -2,7 +2,6 @@ import time
 import logging
 from gateio_api import GateIOAPIClient
 from gateio_websocket import GateIOWebSocketClient
-from ui_order_placement import UIOrderPlacement
 
 class OrderState:
     def __init__(self):
@@ -12,7 +11,7 @@ class OrderState:
         self.order_id = None
 
 class TradingCore:
-    def __init__(self, config):
+    def __init__(self, driver, config):
         self.config = config
         self.api = GateIOAPIClient(config)
         self.state = OrderState()
@@ -108,11 +107,6 @@ class TradingCore:
         self.logger.info("Attempting state recovery...")
         self.api.cancel_all_orders(self.config['trading']['currency_pair'])
         self.state = OrderState()
-        self.driver.refresh()
-        from selenium.webdriver.support.ui import WebDriverWait  # local import to avoid circular dependency issues
-        WebDriverWait(self.driver, 30).until(
-            lambda d: d.execute_script("return document.readyState") == "complete"
-        )
 
     def manage_orders(self):
         trade_count = 0
