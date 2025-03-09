@@ -23,4 +23,4 @@ trading:
 logging:
   enabled: true
   file: "trading_bot.log"
-  level: "INFO"
+  level: "DEBUG"
