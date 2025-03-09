@@ -129,55 +129,38 @@ class TradingCore:
         self.logger.info("Initiating state recovery...")
         max_retries = 3
         recovered = False
-    
+        preserved_order_type = self.state.order_type  # Capture current order type
+
         for attempt in range(max_retries):
             try:
-                # 1. Cancel orders with verification
+                # 1. Cancel all existing orders
                 canceled = self.api.cancel_all_orders(self.config['trading']['currency_pair'])
                 open_orders = self.api.get_open_orders()
             
                 if open_orders:
                     self.logger.error(f"Failed to cancel orders: {open_orders}")
                     raise Exception("Order cancellation failed")
-                
-                # 2. Verify balances
-                base, quote = self.api.symbol.split('/')
-                balance = self.api.exchange.fetch_balance()
-                if balance[base]['free'] < 0 or balance[quote]['free'] < 0:
-                    self.logger.critical("Negative balance detected!")
-                    # Implement additional emergency measures here
-                
-                # 3. Reset state with sanity checks
+
+                # 2. Reset state while preserving order type
                 self.state = OrderState()
-                self.state.order_type = 'buy' if balance[quote]['free'] > 0 else 'sell'
+                self.state.order_type = preserved_order_type  # Restore order type
             
-                # 4. Sync with current market price
-                self.current_price = self._get_market_price()
-            
+                # 3. Add fallback to initial state
+                if self.state.order_type is None:
+                    self.state.order_type = 'buy'  # Default initial state
+                
                 recovered = True
                 break
             
             except Exception as e:
                 self.logger.error(f"Recovery attempt {attempt+1} failed: {str(e)}")
                 time.sleep(2 ** attempt)
-    
+
         if not recovered:
             self.logger.critical("State recovery failed after multiple attempts!")
-            # Implement emergency shutdown here
-        
-        self.logger.info("State recovery completed successfully")
+            # Add emergency shutdown logic here
     
-        # Get current holdings
-        balance = self.api.exchange.fetch_balance()
-        base, quote = self.api.symbol.split('/')
-    
-        # Determine next order type based on assets
-        if balance[base]['free'] > 0:
-            self.state.order_type = 'sell'  # We have crypto to sell
-        else:
-            self.state.order_type = 'buy'   # We have stablecoin to buy
-        
-        self.logger.info(f"Recovery set next order to: {self.state.order_type}")
+        self.logger.info(f"State recovery completed. Resuming with order type: {self.state.order_type}")
 
     def manage_orders(self):
         trade_count = 0
