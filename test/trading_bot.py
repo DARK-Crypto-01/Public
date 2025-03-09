@@ -133,27 +133,37 @@ class TradingCore:
 
     def manage_orders(self):
         trade_count = 0
-        max_trades = self.config['trading'].get('trade_limit', None)
+        max_trades = self.config['trading'].get('trade_limit')
+        
         self.logger.info("Starting order management loop.")
         while True:
             if max_trades is not None and trade_count >= max_trades:
                 self.logger.info("Trade limit reached. Exiting trading loop.")
                 break
+                
             try:
                 open_orders = self.api.get_open_orders()
-                self.logger.debug(f"Trade count: {trade_count}. Open orders: {open_orders}")
+                self.logger.debug(f"Open orders: {open_orders}")
+
                 if not open_orders:
                     if not self.state.active:
+                        self.logger.info("No active orders - placing initial order")
                         self._place_new_order()
                     else:
+                        self.logger.info("Order executed successfully")
                         self._handle_order_execution()
+                        trade_count += 1  # Only increment when orders complete
                 else:
+                    self.logger.debug("Monitoring existing orders")
                     self._monitor_active_order(open_orders[0])
-                trade_count += 1
-                time.sleep(0.1)
+
+                # Use websocket-driven price updates instead of sleep
+                time.sleep(self.config['trading']['price_poll_interval'])
+                
             except KeyboardInterrupt:
                 self.logger.info("Stopped by user")
                 break
             except Exception as e:
                 self.logger.error(f"Error in manage_orders loop: {str(e)}")
                 self._recover_state()
+                time.sleep(1)  # Prevent tight error loops
