@@ -126,10 +126,58 @@ class TradingCore:
         return self.current_price
 
     def _recover_state(self):
-        self.logger.info("Attempting state recovery...")
-        self.api.cancel_all_orders(self.config['trading']['currency_pair'])
-        self.state = OrderState()
-        self.logger.info("State has been reset.")
+        self.logger.info("Initiating state recovery...")
+        max_retries = 3
+        recovered = False
+    
+        for attempt in range(max_retries):
+            try:
+                # 1. Cancel orders with verification
+                canceled = self.api.cancel_all_orders(self.config['trading']['currency_pair'])
+                open_orders = self.api.get_open_orders()
+            
+                if open_orders:
+                    self.logger.error(f"Failed to cancel orders: {open_orders}")
+                    raise Exception("Order cancellation failed")
+                
+                # 2. Verify balances
+                base, quote = self.api.symbol.split('/')
+                balance = self.api.exchange.fetch_balance()
+                if balance[base]['free'] < 0 or balance[quote]['free'] < 0:
+                    self.logger.critical("Negative balance detected!")
+                    # Implement additional emergency measures here
+                
+                # 3. Reset state with sanity checks
+                self.state = OrderState()
+                self.state.order_type = 'buy' if balance[quote]['free'] > 0 else 'sell'
+            
+                # 4. Sync with current market price
+                self.current_price = self._get_market_price()
+            
+                recovered = True
+                break
+            
+            except Exception as e:
+                self.logger.error(f"Recovery attempt {attempt+1} failed: {str(e)}")
+                time.sleep(2 ** attempt)
+    
+        if not recovered:
+            self.logger.critical("State recovery failed after multiple attempts!")
+            # Implement emergency shutdown here
+        
+        self.logger.info("State recovery completed successfully")
+    
+        # Get current holdings
+        balance = self.api.exchange.fetch_balance()
+        base, quote = self.api.symbol.split('/')
+    
+        # Determine next order type based on assets
+        if balance[base]['free'] > 0:
+            self.state.order_type = 'sell'  # We have crypto to sell
+        else:
+            self.state.order_type = 'buy'   # We have stablecoin to buy
+        
+        self.logger.info(f"Recovery set next order to: {self.state.order_type}")
 
     def manage_orders(self):
         trade_count = 0
