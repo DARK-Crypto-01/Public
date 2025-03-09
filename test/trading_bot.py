@@ -110,7 +110,9 @@ class TradingCore:
     def _handle_order_execution(self):
         self.logger.info("Order executed successfully.")
         self.state.active = False
+        # Flip order type for next trade
         self.state.order_type = 'sell' if self.state.order_type == 'buy' else 'buy'
+        self.logger.info(f"Next order type set to: {self.state.order_type}")
 
     def _get_market_price(self):
         self.logger.debug("Fetching current market price...")
