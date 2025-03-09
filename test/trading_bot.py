@@ -58,7 +58,7 @@ class TradingCore:
 
     def _place_new_order(self):
         last_price = self._get_market_price()
-        order_type = 'buy' if self.state.order_type != 'buy' else 'sell'
+        order_type = self.state.order_type or 'buy'
         self.logger.info(f"Placing new {order_type} order based on last price: {last_price}")
         trigger, limit = self._calculate_prices(last_price, order_type)
         
