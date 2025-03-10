@@ -6,7 +6,7 @@ api:
   
 # Trading Settings
 trading:
-  currency_pair: "BTC_USDT"
+  currency_pair: "SNAKEAI_USDT"
   trade_limit: 6  #max loops None for infinite
   price_poll_interval: 0.1  # seconds
   buy:
