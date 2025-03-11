@@ -114,12 +114,10 @@ class TradingCore:
         try:
             if self.api.cancel_order(order['id']):
                 self.state.active = False
-                new_price = self._get_market_price()
-                trigger, limit = self._calculate_prices(new_price, self.state.order_type)
-                new_order = self.api.place_stop_limit_order(self.state.order_type, trigger, limit)
+                new_order = self.place_order_with_retry(self.state.order_type)
                 if new_order:
                     self.logger.info(f"Replaced order successfully with new order: {new_order}")
-                    self.state.last_price = new_price
+                    self.state.last_price = self._get_market_price()
                     self.state.active = True
                     self.state.order_id = new_order['id']
                 else:
