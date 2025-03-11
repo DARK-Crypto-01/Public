@@ -56,13 +56,36 @@ class TradingCore:
         self.logger.debug(f"Calculated trigger: {trigger}, limit: {limit}")
         return trigger, limit
 
+    def place_order_with_retry(self, order_type):
+        max_retries = 5
+        retry_delay = 0.1  # initial delay in seconds
+        for attempt in range(max_retries):
+            current_price = self._get_market_price()  # Get latest price
+            trigger, limit = self._calculate_prices(current_price, order_type)
+            order = self.api.place_stop_limit_order(order_type, trigger, limit)
+            if order:
+                self.logger.info(f"Order placed successfully on attempt {attempt+1}")
+                return order
+            else:
+                # Extract error message from exception or response (placeholder)
+                error_message = "fetch_error_from_exception()"
+                if order_type == 'buy' and "trigger price must be >" in error_message:
+                    self.logger.warning("Buy order failed due to trigger price issue. Retrying...")
+                elif order_type == 'sell' and "trigger price must be <" in error_message:
+                    self.logger.warning("Sell order failed due to trigger price issue. Retrying...")
+                else:
+                    self.logger.error("Order placement failed due to an unexpected error.")
+                    break
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+        self.logger.error("Max retries reached. Order not placed.")
+        return None
+
     def _place_new_order(self):
         last_price = self._get_market_price()
         order_type = self.state.order_type or 'buy'
         self.logger.info(f"Placing new {order_type} order based on last price: {last_price}")
-        trigger, limit = self._calculate_prices(last_price, order_type)
-        
-        order = self.api.place_stop_limit_order(order_type, trigger, limit)
+        order = self.place_order_with_retry(order_type)
         if order:
             self.logger.info(f"New order placed: {order}")
             self.state.active = True
